@@ -1,0 +1,37 @@
+# Конфигурация голосовых команд для TODO приложения
+# Этот файл нужно добавить в config/commands.yaml твоего voice-app
+
+todo:
+  добавить:
+    action: "CMD_TODO_ADD"
+    description: "Добавить задачу"
+    handler: "todo_commands.AddTaskCommand"
+    params:
+      api_url: "http://localhost:8000"
+      default_priority: 999
+    examples:
+      - "команда добавить задачу купить молоко"
+      - "команда добавить позвонить врачу"
+      - "команда новая задача сделать презентацию"
+  
+  удалить:
+    action: "CMD_TODO_DELETE"
+    description: "Удалить задачу"
+    handler: "todo_commands.DeleteTaskCommand"
+    params:
+      api_url: "http://localhost:8000"
+    examples:
+      - "команда удалить задачу номер один"
+      - "команда удалить первую"
+      - "команда убрать третью задачу"
+  
+  список:
+    action: "CMD_TODO_LIST"
+    description: "Показать список задач"
+    handler: "todo_commands.ListTasksCommand"
+    params:
+      api_url: "http://localhost:8000"
+    examples:
+      - "команда список задач"
+      - "команда покажи задачи"
+      - "команда что нужно сделать"
