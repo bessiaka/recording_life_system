@@ -3,6 +3,7 @@ REST API endpoints для работы с задачами
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from sqlalchemy import case
 from typing import List
 import logging
 
@@ -15,10 +16,24 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
+# Порядок приоритетов для сортировки
+PRIORITY_ORDER = {
+    "Critical": 1,
+    "High": 2,
+    "Medium": 3,
+    "Low": 4,
+    "Lowest": 5
+}
+
 
 def get_session_id(request: Request) -> str:
     """Получить session_id из заголовка запроса"""
     return request.headers.get("X-Session-ID", "unknown")
+
+
+def generate_task_key(task_id: int) -> str:
+    """Генерирует человекочитаемый ключ задачи"""
+    return f"TASK-{task_id}"
 
 
 @router.get("/", response_model=List[TaskResponse])
@@ -29,7 +44,14 @@ async def get_tasks(db: Session = Depends(get_db)):
     Returns:
         List[TaskResponse]: Список всех задач
     """
-    tasks = db.query(Task).order_by(Task.priority, Task.created_at).all()
+    # Создаем CASE для сортировки по приоритету
+    priority_case = case(
+        {priority: order for priority, order in PRIORITY_ORDER.items()},
+        value=Task.priority,
+        else_=99  # Для неизвестных приоритетов
+    )
+
+    tasks = db.query(Task).order_by(priority_case, Task.created_at).all()
     logger.info(f"📋 Получено задач: {len(tasks)}")
     return tasks
 
@@ -81,7 +103,13 @@ async def create_task(
     db.commit()
     db.refresh(db_task)
 
-    logger.info(f"✅ Задача создана: ID={db_task.id}, title='{db_task.title}', session={session_id}")
+    # Генерируем уникальный ключ после получения ID
+    if not db_task.key:
+        db_task.key = generate_task_key(db_task.id)
+        db.commit()
+        db.refresh(db_task)
+
+    logger.info(f"✅ Задача создана: ID={db_task.id}, key='{db_task.key}', title='{db_task.title}', session={session_id}")
 
     # Отправляем обновление всем подключенным клиентам
     await manager.broadcast({
