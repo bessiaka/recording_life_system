@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  forgejo-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Версия Forgejo Runner
+        RUNNER_VERSION: 6.3.1
+    container_name: forgejo-runner-alpine
+    restart: unless-stopped
+
+    # Privileged mode необходим для Docker-in-Docker
+    privileged: true
+
+    environment:
+      # ВАЖНО: Замените на ваш Forgejo instance!
+      - FORGEJO_INSTANCE_URL=${FORGEJO_INSTANCE_URL:-https://your-forgejo-instance.com}
+
+      # Токен регистрации runner (получите в Forgejo: Settings → Actions → Runners)
+      - FORGEJO_RUNNER_TOKEN=${FORGEJO_RUNNER_TOKEN}
+
+      # Имя runner (опционально)
+      - FORGEJO_RUNNER_NAME=${FORGEJO_RUNNER_NAME:-alpine-runner-production}
+
+      # Метки для runner (опционально)
+      # Формат: label:docker://image,label2:docker://image2
+      - FORGEJO_RUNNER_LABELS=${FORGEJO_RUNNER_LABELS:-alpine:docker://alpine:latest,ubuntu-latest:docker://ubuntu:latest}
+
+      # ===== Дополнительные настройки =====
+
+      # Количество параллельных задач (по умолчанию: 1)
+      - RUNNER_CAPACITY=${RUNNER_CAPACITY:-1}
+
+      # Таймаут для задач в секундах (по умолчанию: 3600 = 1 час)
+      - RUNNER_TIMEOUT=${RUNNER_TIMEOUT:-3600}
+
+      # Интервал обновления в секундах (по умолчанию: 2)
+      - RUNNER_FETCH_INTERVAL=${RUNNER_FETCH_INTERVAL:-2}
+
+      # Кэш
+      - CACHE_ENABLED=${CACHE_ENABLED:-true}
+      - CACHE_MAX_SIZE=${CACHE_MAX_SIZE:-5000}
+
+      # Контейнеры
+      - CONTAINER_NETWORK=${CONTAINER_NETWORK:-bridge}
+      - CONTAINER_PRIVILEGED=${CONTAINER_PRIVILEGED:-true}
+
+    volumes:
+      # Монтируем Docker socket для запуска контейнеров
+      - /var/run/docker.sock:/var/run/docker.sock
+
+      # Персистентное хранилище для runner данных
+      - ./runner-data:/data
+
+      # Кэш для ускорения сборок
+      - ./cache:/data/.cache
+
+    networks:
+      - runner-network
+
+    # Ограничения ресурсов для экономии
+    deploy:
+      resources:
+        limits:
+          # Максимум 1 CPU core
+          cpus: '1.0'
+          # Максимум 1 GB RAM
+          memory: 1G
+        reservations:
+          # Минимум 0.25 CPU cores
+          cpus: '0.25'
+          # Минимум 256 MB RAM
+          memory: 256M
+
+networks:
+  runner-network:
+    driver: bridge

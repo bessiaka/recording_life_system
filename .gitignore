@@ -51,3 +51,6 @@ logs/
 .github/runner/runner-data/
 .github/runner/.env
 .github/runner/_work/
+.github/runner-forgejo/runner-data/
+.github/runner-forgejo/.env
+.github/runner-forgejo/cache/
