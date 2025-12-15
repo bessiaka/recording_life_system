@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: todo-backend-prod
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      - DATABASE_URL=sqlite:////data/tasks.db
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - todo-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://192.168.1.72:8000
+        - VITE_WS_URL=ws://192.168.1.72:8000/ws
+    container_name: todo-frontend-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://192.168.1.72:8000
+      - VITE_WS_URL=ws://192.168.1.72:8000/ws
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - todo-network
+    command: npm run dev -- --host 0.0.0.0
+
+networks:
+  todo-network:
+    driver: bridge
+
+volumes:
+  data:

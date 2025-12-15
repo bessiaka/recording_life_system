@@ -1,0 +1,78 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    # Запускаем только при push в main или при закрытии одобренного PR
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true)
+
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up environment variables
+        run: |
+          echo "COMMIT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Create data directory
+        run: |
+          mkdir -p ./data
+          chmod 755 ./data
+
+      - name: Stop running containers
+        run: |
+          docker-compose -f docker-compose.prod.yml down || true
+        continue-on-error: true
+
+      - name: Build Docker images
+        run: |
+          docker-compose -f docker-compose.prod.yml build --no-cache
+
+      - name: Start containers
+        run: |
+          docker-compose -f docker-compose.prod.yml up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for backend to be ready..."
+          timeout 60 sh -c 'until curl -f http://localhost:8000/health 2>/dev/null; do sleep 2; done' || true
+
+          echo "Waiting for frontend to be ready..."
+          timeout 60 sh -c 'until curl -f http://localhost:3000 2>/dev/null; do sleep 2; done' || true
+
+      - name: Check services status
+        run: |
+          docker-compose -f docker-compose.prod.yml ps
+
+      - name: Show logs
+        if: failure()
+        run: |
+          docker-compose -f docker-compose.prod.yml logs --tail=50
+
+      - name: Clean up old images
+        run: |
+          docker image prune -f --filter "until=24h"
+        continue-on-error: true
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployment successful!"
+          echo "📦 Commit: ${{ env.COMMIT_SHA }}"
+          echo "📝 Message: ${{ env.COMMIT_MESSAGE }}"
+          echo "🌿 Branch: ${{ env.BRANCH_NAME }}"
+          echo "🚀 Services are running on http://192.168.1.72:3000"

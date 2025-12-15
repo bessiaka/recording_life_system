@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  github-runner:
+    build: .
+    container_name: github-actions-runner
+    restart: unless-stopped
+    privileged: true  # Необходимо для Docker-in-Docker
+    environment:
+      # ВАЖНО: Замените на ваш репозиторий!
+      - GITHUB_REPOSITORY=your-username/recording_life_system
+      - RUNNER_TOKEN=${RUNNER_TOKEN}
+      - RUNNER_NAME=production-server
+      - RUNNER_LABELS=self-hosted,Linux,X64,docker,production
+    volumes:
+      # Монтируем Docker socket для запуска контейнеров
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Персистентное хранилище для runner данных
+      - ./runner-data:/home/runner/_work
+    networks:
+      - runner-network
+
+networks:
+  runner-network:
+    driver: bridge

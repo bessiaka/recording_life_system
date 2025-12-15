@@ -36,6 +36,7 @@ data/
 Thumbs.db
 
 # Environment
+.env
 .env.local
 .env.*.local
 
@@ -45,3 +46,8 @@ logs/
 
 # Docker
 .dockerignore
+
+# CI/CD
+.github/runner/runner-data/
+.github/runner/.env
+.github/runner/_work/
