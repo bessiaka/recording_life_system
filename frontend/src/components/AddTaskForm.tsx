@@ -5,8 +5,10 @@
 import React, { useState } from 'react';
 import { taskAPI } from '../api/tasks';
 import { Priority, Status, TaskType, Location, Environment, Connectivity, ExecutionMode } from '../types/task';
+import { useTaskStore } from '../store/taskStore';
 
 export const AddTaskForm: React.FC = () => {
+  const { addTask } = useTaskStore();
   // Основные поля
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -48,7 +50,8 @@ export const AddTaskForm: React.FC = () => {
     }
 
     try {
-      await taskAPI.createTask({
+      // Создаем задачу на сервере
+      const createdTask = await taskAPI.createTask({
         title: title.trim(),
         description: description.trim() || undefined,
         type,
@@ -67,6 +70,10 @@ export const AddTaskForm: React.FC = () => {
         recurrence_rule: recurrenceRule || undefined,
         routine_type: routineType || undefined,
       });
+
+      // ✅ Оптимистичное обновление - сразу добавляем в store
+      console.log('✨ Оптимистичное обновление: добавляем задачу в store');
+      addTask(createdTask);
 
       // Очистка формы
       resetForm();

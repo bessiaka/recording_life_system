@@ -54,27 +54,37 @@ export const useWebSocket = () => {
           const message: WebSocketMessage = JSON.parse(event.data);
           console.log('📩 WebSocket сообщение:', message);
 
-          if (message.session_id === SESSION_ID) {
-            console.log('⏭️  Пропускаем своё событие (session_id совпадает)');
-            return;
-          }
+          // ℹ️ Убрали фильтрацию по session_id - обрабатываем все события
+          // Защита от дубликатов реализована в store (проверка exists)
 
           switch (message.type) {
             case 'task_created':
               if (message.task) {
-                console.log('➕ Добавляем задачу из WebSocket:', message.task.title);
+                const isOwnEvent = message.session_id === SESSION_ID;
+                console.log(
+                  isOwnEvent ? '➕ Подтверждение своей задачи:' : '➕ Задача от другого клиента:',
+                  message.task.title
+                );
                 addTask(message.task);
               }
               break;
             case 'task_updated':
               if (message.task) {
-                console.log('✏️  Обновляем задачу из WebSocket:', message.task.title);
+                const isOwnEvent = message.session_id === SESSION_ID;
+                console.log(
+                  isOwnEvent ? '✏️  Подтверждение обновления:' : '✏️  Обновление от другого клиента:',
+                  message.task.title
+                );
                 updateTask(message.task);
               }
               break;
             case 'task_deleted':
               if (message.task_id) {
-                console.log('🗑️  Удаляем задачу из WebSocket:', message.task_id);
+                const isOwnEvent = message.session_id === SESSION_ID;
+                console.log(
+                  isOwnEvent ? '🗑️  Подтверждение удаления:' : '🗑️  Удаление от другого клиента:',
+                  message.task_id
+                );
                 deleteTask(message.task_id);
               }
               break;
