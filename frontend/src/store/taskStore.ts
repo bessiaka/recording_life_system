@@ -3,13 +3,39 @@
  */
 
 import { create } from 'zustand';
-import { Task } from '../types/task';
+import { Task, Priority } from '../types/task';
+
+// Порядок приоритетов для сортировки (совпадает с бэкендом)
+const PRIORITY_ORDER: Record<Priority, number> = {
+  'Critical': 1,
+  'High': 2,
+  'Medium': 3,
+  'Low': 4,
+  'Lowest': 5,
+};
+
+/**
+ * Функция сортировки задач по приоритету
+ */
+const sortTasks = (tasks: Task[]): Task[] => {
+  return tasks.sort((a, b) => {
+    const priorityA = PRIORITY_ORDER[a.priority || 'Medium'] || 99;
+    const priorityB = PRIORITY_ORDER[b.priority || 'Medium'] || 99;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // Если приоритеты одинаковые, сортируем по дате создания
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  });
+};
 
 interface TaskStore {
   tasks: Task[];
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   setTasks: (tasks: Task[]) => void;
   addTask: (task: Task) => void;
@@ -26,7 +52,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
 
   setTasks: (tasks) =>
     set({
-      tasks: tasks.sort((a, b) => a.priority - b.priority),
+      tasks: sortTasks(tasks),
     }),
 
   addTask: (task) =>
@@ -40,15 +66,15 @@ export const useTaskStore = create<TaskStore>((set) => ({
 
       console.log('➕ Добавляем новую задачу в store:', task.title);
       return {
-        tasks: [...state.tasks, task].sort((a, b) => a.priority - b.priority),
+        tasks: sortTasks([...state.tasks, task]),
       };
     }),
 
   updateTask: (task) =>
     set((state) => ({
-      tasks: state.tasks
-        .map((t) => (t.id === task.id ? task : t))
-        .sort((a, b) => a.priority - b.priority),
+      tasks: sortTasks(
+        state.tasks.map((t) => (t.id === task.id ? task : t))
+      ),
     })),
 
   deleteTask: (taskId) =>

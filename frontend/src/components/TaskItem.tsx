@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { Task, Priority, Status, TaskType } from '../types/task';
 import { taskAPI } from '../api/tasks';
 import { format } from 'date-fns';
+import { useTaskStore } from '../store/taskStore';
 
 interface TaskItemProps {
   task: Task;
@@ -44,6 +45,7 @@ const getStatusColor = (status?: Status): string => {
 };
 
 export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
+  const { updateTask, deleteTask } = useTaskStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -63,7 +65,8 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
 
   const handleSave = async () => {
     try {
-      await taskAPI.updateTask(task.id, {
+      // Обновляем задачу на сервере
+      const updatedTask = await taskAPI.updateTask(task.id, {
         title,
         description: description || undefined,
         type,
@@ -73,6 +76,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
         start_date: startDate || undefined,
         estimate: estimate || undefined,
       });
+
+      // ✅ Оптимистичное обновление - сразу обновляем в store
+      console.log('✨ Оптимистичное обновление: обновляем задачу в store');
+      updateTask(updatedTask);
+
       setIsEditing(false);
     } catch (error) {
       console.error('Ошибка обновления задачи:', error);
@@ -83,10 +91,16 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   const handleDelete = async () => {
     if (window.confirm('Удалить эту задачу?')) {
       try {
+        // ✅ Оптимистичное удаление - сразу удаляем из store
+        console.log('✨ Оптимистичное удаление: удаляем задачу из store');
+        deleteTask(task.id);
+
+        // Удаляем задачу на сервере
         await taskAPI.deleteTask(task.id);
       } catch (error) {
         console.error('Ошибка удаления задачи:', error);
         alert('Не удалось удалить задачу');
+        // TODO: можно откатить удаление в случае ошибки
       }
     }
   };
