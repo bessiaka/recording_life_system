@@ -139,16 +139,16 @@ priority_number = PRIORITY_MAPPING.get(task["priority"], 3)
 Это самый простой и надежный способ для стадии разработки:
 
 ```bash
+# ⚠️ Все команды выполняются из корня репозитория!
+
 # 1. Остановить приложение
 docker-compose down
 
-# 2. (Опционально) Создать резервную копию, если нужны данные
-cp /путь/к/tasks.db /путь/к/tasks.db.backup
+# 2. (Опционально) Создать резервную копию
+cp data/tasks.db data/tasks.db.backup
 
 # 3. Удалить старую базу данных
-rm -f /путь/к/tasks.db
-# Или для Docker volume:
-docker volume rm recording_life_system_tasks_data
+rm -f data/tasks.db
 
 # 4. Запустить приложение
 docker-compose up -d
@@ -156,14 +156,25 @@ docker-compose up -d
 # ✅ База данных будет создана автоматически с новой схемой!
 ```
 
-### Быстрое пересоздание локальной БД
-
-Если вы разрабатываете локально (без Docker):
+### Быстрое пересоздание с помощью скрипта
 
 ```bash
-# Из корня проекта
+# Из корня репозитория
+./backend/reset_db.sh
+
+# Затем запустить приложение
+docker-compose up -d
+```
+
+### Для локальной разработки (без Docker)
+
+```bash
+# Из корня репозитория
 rm -f data/tasks.db
+
 # Запустите бэкенд - БД создастся автоматически
+cd backend
+uvicorn app.main:app --reload
 ```
 
 ## Проверка после обновления
