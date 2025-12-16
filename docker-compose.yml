@@ -1,44 +1,59 @@
-version: '3.8'
+# ===================================
+# Docker Compose Configuration
+# ===================================
+# Использование:
+#   Development: docker compose --env-file=.env.development up -d
+#   Production:  docker compose --env-file=.env.production up -d
+#
+# Или создайте симлинк .env на нужное окружение:
+#   ln -sf .env.development .env
+#   docker compose up -d
 
 services:
   # Backend API
   backend:
     build: ./backend
-    container_name: todo-backend
+    container_name: ${COMPOSE_PROJECT_NAME:-recording_life}-backend
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend/app:/app/app
       - ./data:/data
     environment:
-      - DATABASE_URL=sqlite:////data/tasks.db
-      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/tasks.db}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - HOST_IP=${HOST_IP:-localhost}
+      - TZ=${TZ:-UTC}
     restart: unless-stopped
     networks:
-      - todo-network
+      - app-network
 
   # Frontend React
   frontend:
     build: ./frontend
-    container_name: todo-frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-recording_life}-frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
     environment:
-      - VITE_API_URL=http://192.168.1.13:8000
-      - VITE_WS_URL=ws://192.168.1.13:8000/ws
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000/ws}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - TZ=${TZ:-UTC}
     depends_on:
       - backend
     restart: unless-stopped
     networks:
-      - todo-network
+      - app-network
     command: npm run dev -- --host 0.0.0.0
 
 networks:
-  todo-network:
+  app-network:
     driver: bridge
+    name: ${COMPOSE_PROJECT_NAME:-recording_life}-network
 
 volumes:
   data:
