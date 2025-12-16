@@ -72,10 +72,10 @@ CACHE_MAX_SIZE=5000        # Размер кэша (5 GB)
 
 ```bash
 # Запустите runner
-docker-compose up -d --build
+docker compose up -d --build
 
 # Проверьте логи
-docker-compose logs -f
+docker compose logs -f
 
 # Вы должны увидеть:
 # ✅ Runner зарегистрирован успешно
@@ -91,7 +91,7 @@ docker-compose logs -f
 **На сервере:**
 ```bash
 # Проверка статуса контейнера
-docker-compose ps
+docker compose ps
 
 # Проверка использования ресурсов
 docker stats forgejo-runner-alpine
@@ -109,7 +109,7 @@ docker stats forgejo-runner-alpine
 - **CPU**: 10-100% (зависит от задачи)
 - **Disk**: +кэш и артефакты
 
-### Ограничения в docker-compose.yml:
+### Ограничения в docker compose.yml:
 ```yaml
 deploy:
   resources:
@@ -151,8 +151,8 @@ jobs:
 
       - name: Build
         run: |
-          apk add --no-cache docker-compose
-          docker-compose build
+          apk add --no-cache docker compose
+          docker compose build
 ```
 
 ### Множественные runners
@@ -162,12 +162,12 @@ jobs:
 ```bash
 # Первый runner
 cd ~/forgejo-runner-1
-docker-compose up -d
+docker compose up -d
 
 # Второй runner
 cd ~/forgejo-runner-2
 # Измените порты если нужно
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Capacity (параллелизм)
@@ -188,52 +188,52 @@ RUNNER_CAPACITY=2  # Будет выполнять 2 задачи паралле
 
 ```bash
 # Все логи
-docker-compose logs -f
+docker compose logs -f
 
 # Последние 100 строк
-docker-compose logs --tail=100
+docker compose logs --tail=100
 
 # С временными метками
-docker-compose logs -f --timestamps
+docker compose logs -f --timestamps
 ```
 
 ### Перезапуск
 
 ```bash
-docker-compose restart
+docker compose restart
 ```
 
 ### Остановка
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Обновление
 
 ```bash
 # Остановите runner
-docker-compose down
+docker compose down
 
-# Обновите версию в docker-compose.yml (args.RUNNER_VERSION)
-nano docker-compose.yml
+# Обновите версию в docker compose.yml (args.RUNNER_VERSION)
+nano docker compose.yml
 
 # Пересоберите образ
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Запустите
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Удаление и переустановка
 
 ```bash
 # Полное удаление
-docker-compose down -v
+docker compose down -v
 rm -rf runner-data/ cache/
 
 # Новая установка
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## 🎨 Пример Forgejo Workflow
@@ -258,16 +258,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apk add --no-cache docker-compose curl
+          apk add --no-cache docker compose curl
 
       - name: Build Docker images
         run: |
-          docker-compose -f docker-compose.prod.yml build
+          docker compose -f docker compose.prod.yml build
 
       - name: Deploy
         run: |
-          docker-compose -f docker-compose.prod.yml down
-          docker-compose -f docker-compose.prod.yml up -d
+          docker compose -f docker compose.prod.yml down
+          docker compose -f docker compose.prod.yml up -d
 
       - name: Health check
         run: |
@@ -312,7 +312,7 @@ steps:
 
 ```bash
 # Проверьте логи
-docker-compose logs
+docker compose logs
 
 # Проверьте токен
 cat .env | grep TOKEN
@@ -339,13 +339,13 @@ docker ps
 
 # Перезапустите Docker
 sudo systemctl restart docker
-docker-compose restart
+docker compose restart
 ```
 
 ### Не хватает памяти
 
 ```bash
-# Увеличьте лимиты в docker-compose.yml
+# Увеличьте лимиты в docker compose.yml
 limits:
   memory: 2G  # Вместо 1G
 
@@ -402,7 +402,7 @@ steps:
 
 ### 3. Настройте лимиты ресурсов
 
-Если runner тормозит другие сервисы, ограничьте ресурсы в docker-compose.yml
+Если runner тормозит другие сервисы, ограничьте ресурсы в docker compose.yml
 
 ### 4. Множественные runners
 

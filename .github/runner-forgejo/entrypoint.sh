@@ -57,14 +57,14 @@ runner:
   # Количество параллельных задач
   capacity: ${RUNNER_CAPACITY:-1}
 
-  # Таймаут для задач (в секундах)
-  timeout: ${RUNNER_TIMEOUT:-3600}
+  # Таймаут для задач (формат: "3600s", "1h", "30m")
+  timeout: ${RUNNER_TIMEOUT:-3600s}
 
-  # Интервал обновления (в секундах)
-  fetch_interval: ${RUNNER_FETCH_INTERVAL:-2}
+  # Интервал обновления (формат: "2s", "5s")
+  fetch_interval: ${RUNNER_FETCH_INTERVAL:-2s}
 
-  # Таймаут для fetch (в секундах)
-  fetch_timeout: ${RUNNER_FETCH_TIMEOUT:-5}
+  # Таймаут для fetch (формат: "5s", "10s")
+  fetch_timeout: ${RUNNER_FETCH_TIMEOUT:-5s}
 
 cache:
   enabled: ${CACHE_ENABLED:-true}
