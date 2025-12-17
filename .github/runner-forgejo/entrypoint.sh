@@ -36,7 +36,7 @@ else
     echo "🔧 Регистрация нового runner..."
 
     # Регистрация runner
-    forgejo-runner register \
+    act_runner register \
         --no-interactive \
         --instance "$FORGEJO_INSTANCE_URL" \
         --token "$FORGEJO_RUNNER_TOKEN" \
@@ -98,4 +98,4 @@ cleanup() {
 trap cleanup SIGTERM SIGINT
 
 # Запускаем runner
-exec forgejo-runner daemon --config config.yaml
+exec act_runner daemon --config config.yaml
