@@ -66,13 +66,16 @@ docker images "$TAG" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.Cr
 # Тестирование образа
 echo ""
 echo -e "${YELLOW}🧪 Тестирование образа...${NC}"
-docker run --rm "$TAG" bash -c "
+# ВАЖНО: Используем --entrypoint bash чтобы обойти /entrypoint.sh
+# Для тестирования нам нужно только проверить версии инструментов
+docker run --rm --entrypoint bash "$TAG" -c "
     echo '✅ Node.js:' \$(node --version)
     echo '✅ NPM:' \$(npm --version)
     echo '✅ Python:' \$(python --version)
     echo '✅ Git:' \$(git --version)
     echo '✅ Docker:' \$(docker --version)
     echo '✅ Docker Compose:' \$(docker compose version)
+    echo '✅ Act Runner:' \$(act_runner --version)
 "
 
 echo ""
