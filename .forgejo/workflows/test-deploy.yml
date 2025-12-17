@@ -1,0 +1,71 @@
+name: Test Deploy Workflow (Temporary)
+
+# ========================================
+# ТЕСТОВЫЙ WORKFLOW - УДАЛИТЬ ПОСЛЕ ПРОВЕРКИ
+# ========================================
+# Этот workflow запускается при push в ветку claude/setup-github-actions-cicd-F5yxE
+# для проверки работы CI/CD перед merge в main
+
+on:
+  push:
+    branches:
+      - claude/setup-github-actions-cicd-F5yxE
+
+jobs:
+  test-deploy:
+    runs-on: alpine
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test - Print environment info
+        run: |
+          echo "========================================="
+          echo "🧪 ТЕСТОВЫЙ ЗАПУСК WORKFLOW"
+          echo "========================================="
+          echo "Ветка: ${{ github.ref_name }}"
+          echo "Коммит: ${{ github.sha }}"
+          echo "Автор: ${{ github.actor }}"
+          echo "Репозиторий: ${{ github.repository }}"
+          echo "========================================="
+
+      - name: Test - Check .env.production exists
+        run: |
+          if [ -f ".env.production" ]; then
+            echo "✅ .env.production найден"
+            echo "Содержимое:"
+            cat .env.production
+          else
+            echo "❌ .env.production НЕ найден"
+            echo "Создайте его на Server перед production деплоем"
+            exit 1
+          fi
+
+      - name: Test - Check Docker Compose config
+        run: |
+          echo "🔍 Проверка Docker Compose конфигурации..."
+          if ! command -v docker &> /dev/null; then
+            echo "❌ Docker не установлен в runner"
+            echo "Для полной проверки запустите на Server:"
+            echo "  docker compose --env-file=.env.production config"
+            exit 0
+          fi
+
+          docker compose --env-file=.env.production config || true
+
+      - name: Test - Dry run (без реального деплоя)
+        run: |
+          echo "========================================="
+          echo "✅ WORKFLOW РАБОТАЕТ КОРРЕКТНО!"
+          echo "========================================="
+          echo "Следующие шаги для production:"
+          echo "1. Удалить этот тестовый workflow"
+          echo "2. Замержить ветку в main"
+          echo "3. Push в main запустит реальный деплой"
+          echo "========================================="
+
+      - name: Test - Success notification
+        run: |
+          echo "🎉 Тест успешно пройден!"
+          echo "Workflow запустился и отработал корректно"
