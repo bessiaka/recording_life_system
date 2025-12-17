@@ -6,7 +6,7 @@ LABEL description="Lightweight Alpine-based Forgejo Actions Runner"
 LABEL version="1.0.0-alpine"
 
 # Аргументы сборки
-ARG RUNNER_VERSION=6.3.1
+ARG RUNNER_VERSION=0.2.11
 ARG TARGETPLATFORM=linux/amd64
 
 # Установка переменных окружения

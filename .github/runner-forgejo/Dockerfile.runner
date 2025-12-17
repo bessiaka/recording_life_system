@@ -9,7 +9,7 @@ LABEL description="Optimized Forgejo Actions Runner with Python, Node.js, and Do
 LABEL version="1.0.0"
 
 # Аргументы сборки
-ARG RUNNER_VERSION=6.3.1
+ARG RUNNER_VERSION=0.2.11
 ARG TARGETPLATFORM=linux/amd64
 
 # Установка переменных окружения

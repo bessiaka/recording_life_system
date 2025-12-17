@@ -10,8 +10,8 @@ services:
       # Для Alpine Optimized (легковесный, ~200 MB):
       # dockerfile: Dockerfile.runner-alpine
       args:
-        # Версия Forgejo Runner
-        RUNNER_VERSION: 6.3.1
+        # Версия Gitea Act Runner (совместим с Forgejo)
+        RUNNER_VERSION: 0.2.11
     container_name: forgejo-runner-optimized
     image: forgejo-runner-optimized:debian
     restart: unless-stopped
