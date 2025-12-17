@@ -31,7 +31,9 @@ services:
 
       # Метки для runner (опционально)
       # Формат: label:docker://image,label2:docker://image2
-      - FORGEJO_RUNNER_LABELS=${FORGEJO_RUNNER_LABELS:-alpine:docker://alpine:latest,ubuntu-latest:docker://ubuntu:latest}
+      # ВАЖНО: Используем ЛОКАЛЬНЫЕ образы с Node.js для поддержки GitHub Actions
+      # Эти образы должны быть собраны заранее через ./build-runner-image.sh
+      - FORGEJO_RUNNER_LABELS=${FORGEJO_RUNNER_LABELS:-alpine:docker://forgejo-runner-optimized:debian,debian:docker://forgejo-runner-optimized:debian,ubuntu-latest:docker://forgejo-runner-optimized:debian}
 
       # ===== Дополнительные настройки =====
 
