@@ -4,11 +4,16 @@ services:
   forgejo-runner:
     build:
       context: .
-      dockerfile: Dockerfile
+      # ВАЖНО: Используем оптимизированный Dockerfile с Node.js и Python
+      # Для Debian Optimized (рекомендуется, ~400 MB):
+      dockerfile: Dockerfile.runner
+      # Для Alpine Optimized (легковесный, ~200 MB):
+      # dockerfile: Dockerfile.runner-alpine
       args:
         # Версия Forgejo Runner
         RUNNER_VERSION: 6.3.1
-    container_name: forgejo-runner-alpine
+    container_name: forgejo-runner-optimized
+    image: forgejo-runner-optimized:debian
     restart: unless-stopped
 
     # Privileged mode необходим для Docker-in-Docker

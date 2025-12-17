@@ -1,0 +1,77 @@
+# ============================================
+# Stage 1: Base image with tools
+# ============================================
+FROM node:20-slim AS base
+
+# Метаданные образа
+LABEL maintainer="bessiaka"
+LABEL description="Optimized Forgejo Actions Runner with Python, Node.js, and Docker"
+LABEL version="1.0.0"
+
+# Аргументы сборки
+ARG RUNNER_VERSION=6.3.1
+ARG TARGETPLATFORM=linux/amd64
+
+# Установка переменных окружения
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    NODE_ENV=production \
+    RUNNER_VERSION=${RUNNER_VERSION}
+
+# Установка Python, Git, Docker CLI за один RUN (минимизация слоев)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Python и pip
+    python3 python3-pip python3-venv \
+    # Git и базовые утилиты
+    git bash curl wget ca-certificates \
+    # Docker repository dependencies
+    gnupg lsb-release \
+    && rm -rf /var/lib/apt/lists/* \
+    # Создание симлинков python -> python3
+    && ln -sf /usr/bin/python3 /usr/bin/python \
+    && ln -sf /usr/bin/pip3 /usr/bin/pip
+
+# Установка Docker CLI (в отдельном слое для кеширования)
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+       > /etc/apt/sources.list.d/docker.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       docker-ce-cli \
+       docker-compose-plugin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Установка Forgejo Act Runner
+RUN echo "Installing Forgejo Act Runner ${RUNNER_VERSION}..." && \
+    curl -fsSL "https://dl.gitea.com/act_runner/${RUNNER_VERSION}/act_runner-${RUNNER_VERSION}-linux-amd64" \
+         -o /usr/local/bin/act_runner && \
+    chmod +x /usr/local/bin/act_runner && \
+    act_runner --version
+
+# Проверка установленных версий
+RUN echo "========================================" && \
+    echo "Installed versions:" && \
+    echo "----------------------------------------" && \
+    node --version && \
+    npm --version && \
+    python --version && \
+    git --version && \
+    docker --version && \
+    docker compose version && \
+    act_runner --version && \
+    echo "========================================"
+
+# Рабочая директория для runner
+WORKDIR /data
+
+# Копирование entrypoint скрипта
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD act_runner --version && node --version && python --version || exit 1
+
+# Запускаем через entrypoint
+ENTRYPOINT ["/entrypoint.sh"]

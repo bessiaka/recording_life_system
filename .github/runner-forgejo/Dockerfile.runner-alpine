@@ -1,0 +1,63 @@
+FROM node:20-alpine
+
+# Метаданные образа
+LABEL maintainer="bessiaka"
+LABEL description="Lightweight Alpine-based Forgejo Actions Runner"
+LABEL version="1.0.0-alpine"
+
+# Аргументы сборки
+ARG RUNNER_VERSION=6.3.1
+ARG TARGETPLATFORM=linux/amd64
+
+# Установка переменных окружения
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    NODE_ENV=production \
+    RUNNER_VERSION=${RUNNER_VERSION}
+
+# Установка Python, Git, Docker CLI
+RUN apk add --no-cache \
+    # Python и pip
+    python3 py3-pip \
+    # Git и базовые утилиты
+    git bash curl wget ca-certificates \
+    # Docker CLI (из community repo)
+    docker-cli \
+    docker-cli-compose \
+    # Дополнительные зависимости для Python packages
+    gcc musl-dev python3-dev libffi-dev openssl-dev \
+    && ln -sf /usr/bin/python3 /usr/bin/python
+
+# Установка Forgejo Act Runner
+RUN echo "Installing Forgejo Act Runner ${RUNNER_VERSION}..." && \
+    wget -q "https://dl.gitea.com/act_runner/${RUNNER_VERSION}/act_runner-${RUNNER_VERSION}-linux-amd64" \
+         -O /usr/local/bin/act_runner && \
+    chmod +x /usr/local/bin/act_runner && \
+    act_runner --version
+
+# Проверка установленных версий
+RUN echo "========================================" && \
+    echo "Installed versions:" && \
+    echo "----------------------------------------" && \
+    node --version && \
+    npm --version && \
+    python --version && \
+    git --version && \
+    docker --version && \
+    docker compose version && \
+    act_runner --version && \
+    echo "========================================"
+
+# Рабочая директория для runner
+WORKDIR /data
+
+# Копирование entrypoint скрипта
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD act_runner --version && node --version && python --version || exit 1
+
+# Запускаем через entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
