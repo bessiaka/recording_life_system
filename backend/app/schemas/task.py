@@ -2,7 +2,7 @@
 Pydantic схемы для валидации данных задач
 """
 from pydantic import BaseModel, Field
-from datetime import datetime, date
+from datetime import datetime, date, time
 from typing import Optional, List, Dict, Any
 
 
@@ -29,6 +29,7 @@ class TaskBase(BaseModel):
     remaining_estimate: Optional[str] = Field(None, description="Оставшееся время")
     time_spent: Optional[str] = Field(None, description="Потраченное время")
     start_date: Optional[date] = Field(None, description="Дата начала")
+    scheduled_time: Optional[time] = Field(None, description="Время начала в течение дня")
 
     # 1.6. Связи и структура
     project_id: Optional[int] = Field(None, description="ID проекта")
@@ -95,6 +96,7 @@ class TaskUpdate(BaseModel):
     remaining_estimate: Optional[str] = None
     time_spent: Optional[str] = None
     start_date: Optional[date] = None
+    scheduled_time: Optional[time] = None
 
     # 1.6. Связи и структура
     project_id: Optional[int] = None

@@ -1,7 +1,7 @@
 """
 SQLAlchemy модель для задач
 """
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, JSON, Date
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, JSON, Date, Time
 from datetime import datetime
 
 from ..database.session import Base
@@ -43,6 +43,7 @@ class Task(Base):
         remaining_estimate: Остаток
         time_spent: Фактически потрачено
         start_date: Когда можно начинать
+        scheduled_time: Время начала в течение дня (HH:MM)
 
         # 1.6. Связи и структура
         project_id: Проект
@@ -105,6 +106,7 @@ class Task(Base):
     remaining_estimate = Column(String(50), nullable=True)
     time_spent = Column(String(50), nullable=True)
     start_date = Column(Date, nullable=True)
+    scheduled_time = Column(Time, nullable=True)  # Время начала в течение дня (HH:MM)
 
     # 1.6. Связи и структура
     project_id = Column(Integer, nullable=True)

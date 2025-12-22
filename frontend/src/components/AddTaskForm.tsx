@@ -19,6 +19,7 @@ export const AddTaskForm: React.FC = () => {
   // Сроки
   const [dueDate, setDueDate] = useState('');
   const [startDate, setStartDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
 
   // Планирование
   const [estimate, setEstimate] = useState('');
@@ -59,6 +60,7 @@ export const AddTaskForm: React.FC = () => {
         priority,
         due_date: dueDate || undefined,
         start_date: startDate || undefined,
+        scheduled_time: scheduledTime || undefined,
         estimate: estimate || undefined,
         labels: labels ? labels.split(',').map(l => l.trim()) : undefined,
         location: location || undefined,
@@ -91,6 +93,7 @@ export const AddTaskForm: React.FC = () => {
     setPriority('Medium');
     setDueDate('');
     setStartDate('');
+    setScheduledTime('');
     setEstimate('');
     setLabels('');
     setLocation('');
@@ -201,6 +204,16 @@ export const AddTaskForm: React.FC = () => {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Время:</label>
+                <input
+                  type="time"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                  style={styles.input}
+                  placeholder="09:00"
                 />
               </div>
               <div style={styles.formGroup}>

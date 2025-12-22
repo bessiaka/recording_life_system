@@ -55,6 +55,7 @@ export interface Task {
   remaining_estimate?: string;
   time_spent?: string;
   start_date?: string;
+  scheduled_time?: string;  // Время начала в течение дня (HH:MM)
 
   // 1.6. Связи и структура
   project_id?: number;
@@ -101,6 +102,7 @@ export interface TaskCreate {
   // Сроки
   due_date?: string;
   start_date?: string;
+  scheduled_time?: string;
 
   // Планирование
   estimate?: string;
@@ -151,6 +153,7 @@ export interface TaskUpdate {
   remaining_estimate?: string;
   time_spent?: string;
   start_date?: string;
+  scheduled_time?: string;
 
   // Связи и структура
   project_id?: number;
