@@ -4,15 +4,18 @@ services:
   # Backend API
   backend:
     build: ./backend
-    container_name: todo-backend
+    container_name: ${COMPOSE_PROJECT_NAME:-recording_life_system}-backend
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend/app:/app/app
       - ./data:/data
     environment:
-      - DATABASE_URL=sqlite:////data/tasks.db
-      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/tasks.db}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - TZ=${TZ:-Europe/Moscow}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     restart: unless-stopped
     networks:
       - todo-network
@@ -20,15 +23,16 @@ services:
   # Frontend React
   frontend:
     build: ./frontend
-    container_name: todo-frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-recording_life_system}-frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
     environment:
-      - VITE_API_URL=http://192.168.1.13:8000
-      - VITE_WS_URL=ws://192.168.1.13:8000/ws
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000/ws}
+      - TZ=${TZ:-Europe/Moscow}
     depends_on:
       - backend
     restart: unless-stopped

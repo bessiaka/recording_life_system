@@ -1,0 +1,111 @@
+name: Deploy to Production
+
+# Запускается при изменениях в ветке main (push или pull request)
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: alpine  # Используем alpine runner который уже запущен
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Нужно для проверки изменений в последнем коммите
+
+      - name: Setup environment
+        run: |
+          echo "📦 Setting up environment..."
+
+          # Создаем .env.production если его нет
+          if [ ! -f .env.production ]; then
+            echo "Creating .env.production from example..."
+            cp .env.example .env.production
+
+            # Обновляем значения для production
+            sed -i 's/ENVIRONMENT=development/ENVIRONMENT=production/' .env.production
+            sed -i 's/HOST_IP=192.168.1.13/HOST_IP=192.168.1.72/' .env.production
+            sed -i 's/HOST_NAME=desktop/HOST_NAME=server/' .env.production
+            sed -i 's/BACKEND_PORT=8000/BACKEND_PORT=8003/' .env.production
+            sed -i 's/FRONTEND_PORT=3000/FRONTEND_PORT=3003/' .env.production
+          fi
+
+          # Создаем симлинк .env -> .env.production
+          ln -sf .env.production .env
+
+          echo "✅ Environment configured"
+
+      - name: Check for database reset
+        id: check_db_reset
+        run: |
+          # Проверяем последний коммит на наличие флага [reset-db]
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if echo "$COMMIT_MSG" | grep -q "\[reset-db\]"; then
+            echo "reset_db=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Database reset requested in commit message"
+          else
+            echo "reset_db=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  No database reset requested"
+          fi
+
+      - name: Stop existing containers
+        run: |
+          echo "🛑 Stopping existing containers..."
+          docker compose -f docker-compose.yml --env-file=.env.production down || true
+          echo "✅ Containers stopped"
+
+      - name: Reset database if requested
+        if: steps.check_db_reset.outputs.reset_db == 'true'
+        run: |
+          echo "🗑️  Removing old database..."
+          rm -f ./data/tasks.db
+          echo "✅ Database removed"
+
+      - name: Create data directory
+        run: |
+          echo "📁 Creating data directory..."
+          mkdir -p ./data
+          echo "✅ Data directory ready"
+
+      - name: Build and start containers
+        run: |
+          echo "🚀 Building and starting containers..."
+          docker compose -f docker-compose.yml --env-file=.env.production up -d --build
+          echo "✅ Containers started"
+
+      - name: Wait for services to be ready
+        run: |
+          echo "⏳ Waiting for services to start..."
+          sleep 10
+          echo "✅ Services should be ready"
+
+      - name: Check container status
+        run: |
+          echo "📊 Container status:"
+          docker compose -f docker-compose.yml --env-file=.env.production ps
+
+      - name: Show logs
+        if: always()
+        run: |
+          echo "📋 Backend logs:"
+          docker compose -f docker-compose.yml --env-file=.env.production logs backend --tail=50
+          echo ""
+          echo "📋 Frontend logs:"
+          docker compose -f docker-compose.yml --env-file=.env.production logs frontend --tail=50
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo ""
+          echo "🌐 Application is available at:"
+          echo "  - Frontend: http://192.168.1.72:3003"
+          echo "  - Backend API: http://192.168.1.72:8003"
+          echo "  - API Docs: http://192.168.1.72:8003/docs"
