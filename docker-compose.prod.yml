@@ -1,0 +1,24 @@
+# Production override для docker-compose.yml
+# Использование: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+version: '3.8'
+
+services:
+  # Backend API - Production configuration
+  backend:
+    volumes:
+      # В production монтируем ТОЛЬКО data директорию для SQLite
+      # Код уже внутри образа
+      - ./data:/data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  # Frontend React - Production configuration
+  frontend:
+    volumes: []  # В production НЕТ volume mounts - код внутри образа
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000/ws}
+      - TZ=${TZ:-Europe/Moscow}
+      - NODE_ENV=production
+    # Production build вместо dev server
+    command: sh -c "npm run build && npx vite preview --host 0.0.0.0 --port 3000"
