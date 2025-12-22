@@ -1,24 +1,53 @@
-# Production override для docker-compose.yml
-# Использование: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Production docker-compose - используется STANDALONE (не с base файлом)
+# Использование: docker compose -f docker-compose.prod.yml up -d --build
 
 version: '3.8'
 
 services:
-  # Backend API - Production configuration
+  # Backend API
   backend:
+    build: ./backend
+    container_name: ${COMPOSE_PROJECT_NAME:-recording_life_system}-backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
-      # В production монтируем ТОЛЬКО data директорию для SQLite
-      # Код уже внутри образа
+      # В production монтируем ТОЛЬКО data - код уже в образе!
       - ./data:/data
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/tasks.db}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - TZ=${TZ:-Europe/Moscow}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    restart: unless-stopped
+    networks:
+      - todo-network
+    # Production: без --reload
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
-  # Frontend React - Production configuration
+  # Frontend React
   frontend:
-    volumes: []  # В production НЕТ volume mounts - код внутри образа
+    build: ./frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-recording_life_system}-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    # В production НЕТ volume mounts - весь код в образе!
     environment:
       - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000/ws}
       - TZ=${TZ:-Europe/Moscow}
       - NODE_ENV=production
-    # Production build вместо dev server
-    command: sh -c "npm run build && npx vite preview --host 0.0.0.0 --port 3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - todo-network
+    # В production используем dev server (код в образе)
+    command: npm run dev -- --host 0.0.0.0
+
+networks:
+  todo-network:
+    driver: bridge
+
+volumes:
+  data:

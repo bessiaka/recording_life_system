@@ -9,7 +9,7 @@ on:
 jobs:
   deploy:
     name: Deploy Application
-    runs-on: alpine  # Используем alpine runner который уже запущен
+    runs-on: universal  # Используем universal runner
 
     steps:
       - name: Checkout code
@@ -55,7 +55,7 @@ jobs:
       - name: Stop existing containers
         run: |
           echo "🛑 Stopping existing containers..."
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file=.env.production down || true
+          docker compose -f docker-compose.prod.yml --env-file=.env.production down || true
           echo "✅ Containers stopped"
 
       - name: Reset database if requested
@@ -74,7 +74,7 @@ jobs:
       - name: Build and start containers
         run: |
           echo "🚀 Building and starting containers..."
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file=.env.production up -d --build
+          docker compose -f docker-compose.prod.yml --env-file=.env.production up -d --build
           echo "✅ Containers started"
 
       - name: Wait for services to be ready
@@ -86,16 +86,16 @@ jobs:
       - name: Check container status
         run: |
           echo "📊 Container status:"
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file=.env.production ps
+          docker compose -f docker-compose.prod.yml --env-file=.env.production ps
 
       - name: Show logs
         if: always()
         run: |
           echo "📋 Backend logs:"
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file=.env.production logs backend --tail=50
+          docker compose -f docker-compose.prod.yml --env-file=.env.production logs backend --tail=50
           echo ""
           echo "📋 Frontend logs:"
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file=.env.production logs frontend --tail=50
+          docker compose -f docker-compose.prod.yml --env-file=.env.production logs frontend --tail=50
 
       - name: Deployment summary
         if: success()
