@@ -22,7 +22,7 @@ const WS_URL = getWsUrl();
 export const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<number>();
 
   const { addTask, updateTask, deleteTask } = useTaskStore();
 

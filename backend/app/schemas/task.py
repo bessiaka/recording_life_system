@@ -2,7 +2,7 @@
 Pydantic схемы для валидации данных задач
 """
 from pydantic import BaseModel, Field
-from datetime import datetime, date
+from datetime import datetime, date, time
 from typing import Optional, List, Dict, Any
 
 
@@ -29,6 +29,7 @@ class TaskBase(BaseModel):
     remaining_estimate: Optional[str] = Field(None, description="Оставшееся время")
     time_spent: Optional[str] = Field(None, description="Потраченное время")
     start_date: Optional[date] = Field(None, description="Дата начала")
+    scheduled_time: Optional[time] = Field(None, description="Время начала в течение дня")
 
     # 1.6. Связи и структура
     project_id: Optional[int] = Field(None, description="ID проекта")
@@ -54,6 +55,8 @@ class TaskBase(BaseModel):
     # 3. Рутинность и повторяемость
     is_repeatable: Optional[bool] = Field(default=False, description="Повторяемая задача")
     recurrence_rule: Optional[str] = Field(None, description="Правило повторения")
+    recurrence_interval_hours: Optional[int] = Field(None, description="Интервал повторения в часах")
+    recurrence_count: Optional[int] = Field(None, description="Количество повторений")
     routine_type: Optional[str] = Field(None, description="Тип рутины")
     maintenance_level: Optional[str] = Field(None, description="Уровень важности")
     skip_penalty: Optional[str] = Field(None, description="Штраф за пропуск")
@@ -95,6 +98,7 @@ class TaskUpdate(BaseModel):
     remaining_estimate: Optional[str] = None
     time_spent: Optional[str] = None
     start_date: Optional[date] = None
+    scheduled_time: Optional[time] = None
 
     # 1.6. Связи и структура
     project_id: Optional[int] = None
@@ -120,6 +124,8 @@ class TaskUpdate(BaseModel):
     # 3. Рутинность и повторяемость
     is_repeatable: Optional[bool] = None
     recurrence_rule: Optional[str] = None
+    recurrence_interval_hours: Optional[int] = None
+    recurrence_count: Optional[int] = None
     routine_type: Optional[str] = None
     maintenance_level: Optional[str] = None
     skip_penalty: Optional[str] = None

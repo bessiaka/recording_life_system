@@ -1,7 +1,7 @@
 """
 SQLAlchemy модель для задач
 """
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, JSON, Date
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, JSON, Date, Time
 from datetime import datetime
 
 from ..database.session import Base
@@ -43,6 +43,7 @@ class Task(Base):
         remaining_estimate: Остаток
         time_spent: Фактически потрачено
         start_date: Когда можно начинать
+        scheduled_time: Время начала в течение дня (HH:MM)
 
         # 1.6. Связи и структура
         project_id: Проект
@@ -68,6 +69,8 @@ class Task(Base):
         # 3. Рутинность и повторяемость
         is_repeatable: true / false
         recurrence_rule: Daily / Weekly / Cron
+        recurrence_interval_hours: Интервал повторения в часах
+        recurrence_count: Количество повторений
         routine_type: Routine / Ad-hoc
         maintenance_level: Core / Optional
         skip_penalty: Что будет, если пропустить
@@ -105,6 +108,7 @@ class Task(Base):
     remaining_estimate = Column(String(50), nullable=True)
     time_spent = Column(String(50), nullable=True)
     start_date = Column(Date, nullable=True)
+    scheduled_time = Column(Time, nullable=True)  # Время начала в течение дня (HH:MM)
 
     # 1.6. Связи и структура
     project_id = Column(Integer, nullable=True)
@@ -130,6 +134,8 @@ class Task(Base):
     # 3. Рутинность и повторяемость
     is_repeatable = Column(Boolean, nullable=False, default=False)
     recurrence_rule = Column(String(100), nullable=True)  # Daily / Weekly / Cron
+    recurrence_interval_hours = Column(Integer, nullable=True)  # Интервал повторения в часах
+    recurrence_count = Column(Integer, nullable=True)  # Количество повторений
     routine_type = Column(String(50), nullable=True)  # Routine / Ad-hoc
     maintenance_level = Column(String(50), nullable=True)  # Core / Optional
     skip_penalty = Column(Text, nullable=True)

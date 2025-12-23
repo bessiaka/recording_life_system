@@ -60,11 +60,27 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.split('T')[0] : '');
   const [startDate, setStartDate] = useState(task.start_date ? task.start_date.split('T')[0] : '');
 
+  // Парсим время на часы и минуты
+  const parseTime = (time?: string) => {
+    if (!time) return { hours: '', minutes: '' };
+    const parts = time.split(':');
+    return { hours: parts[0] || '', minutes: parts[1] || '' };
+  };
+
+  const initialTime = parseTime(task.scheduled_time);
+  const [scheduledHours, setScheduledHours] = useState(initialTime.hours);
+  const [scheduledMinutes, setScheduledMinutes] = useState(initialTime.minutes);
+
   // Планирование
   const [estimate, setEstimate] = useState(task.estimate || '');
 
   const handleSave = async () => {
     try {
+      // Формируем время в формате HH:MM
+      const scheduledTime = (scheduledHours && scheduledMinutes)
+        ? `${scheduledHours.padStart(2, '0')}:${scheduledMinutes.padStart(2, '0')}:00`
+        : undefined;
+
       // Обновляем задачу на сервере
       const updatedTask = await taskAPI.updateTask(task.id, {
         title,
@@ -74,6 +90,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
         priority,
         due_date: dueDate || undefined,
         start_date: startDate || undefined,
+        scheduled_time: scheduledTime,
         estimate: estimate || undefined,
       });
 
@@ -169,7 +186,36 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 style={styles.input}
+                min={new Date().toISOString().split('T')[0]}
               />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Время:</label>
+              <div style={styles.timePickerRow}>
+                <select
+                  value={scheduledHours}
+                  onChange={(e) => setScheduledHours(e.target.value)}
+                  style={styles.timeSelect}
+                >
+                  <option value="">ЧЧ</option>
+                  {Array.from({ length: 24 }, (_, i) => {
+                    const hour = i.toString().padStart(2, '0');
+                    return <option key={hour} value={hour}>{hour}</option>;
+                  })}
+                </select>
+                <span style={styles.timeSeparator}>:</span>
+                <select
+                  value={scheduledMinutes}
+                  onChange={(e) => setScheduledMinutes(e.target.value)}
+                  style={styles.timeSelect}
+                >
+                  <option value="">ММ</option>
+                  {Array.from({ length: 60 }, (_, i) => {
+                    const minute = i.toString().padStart(2, '0');
+                    return <option key={minute} value={minute}>{minute}</option>;
+                  })}
+                </select>
+              </div>
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Дедлайн:</label>
@@ -178,6 +224,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 style={styles.input}
+                min={new Date().toISOString().split('T')[0]}
               />
             </div>
             <div style={styles.formGroup}>
@@ -239,10 +286,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
       {isExpanded && (
         <div style={styles.details}>
           {/* Сроки */}
-          {(task.start_date || task.due_date || task.estimate) && (
+          {(task.start_date || task.due_date || task.scheduled_time || task.estimate) && (
             <div style={styles.detailSection}>
               <strong>Планирование:</strong>
               {task.start_date && <div>📅 Начало: {format(new Date(task.start_date), 'dd.MM.yyyy')}</div>}
+              {task.scheduled_time && <div>🕐 Время: {task.scheduled_time.substring(0, 5)}</div>}
               {task.due_date && <div>⏰ Дедлайн: {format(new Date(task.due_date), 'dd.MM.yyyy')}</div>}
               {task.estimate && <div>⏱️ Оценка: {task.estimate}</div>}
             </div>
@@ -462,6 +510,25 @@ const styles = {
     borderRadius: '4px',
     fontSize: '14px',
     boxSizing: 'border-box' as const,
+  } as React.CSSProperties,
+  timePickerRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  } as React.CSSProperties,
+  timeSelect: {
+    padding: '8px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontSize: '14px',
+    boxSizing: 'border-box' as const,
+    flex: 1,
+    minWidth: '70px',
+  } as React.CSSProperties,
+  timeSeparator: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#333',
   } as React.CSSProperties,
   titleInput: {
     width: '100%',

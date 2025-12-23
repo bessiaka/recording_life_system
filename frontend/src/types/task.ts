@@ -55,6 +55,7 @@ export interface Task {
   remaining_estimate?: string;
   time_spent?: string;
   start_date?: string;
+  scheduled_time?: string;  // Время начала в течение дня (HH:MM)
 
   // 1.6. Связи и структура
   project_id?: number;
@@ -83,6 +84,8 @@ export interface Task {
   // 3. Рутинность и повторяемость
   is_repeatable?: boolean;
   recurrence_rule?: string;
+  recurrence_interval_hours?: number;
+  recurrence_count?: number;
   routine_type?: string;
   maintenance_level?: string;
   skip_penalty?: string;
@@ -101,6 +104,7 @@ export interface TaskCreate {
   // Сроки
   due_date?: string;
   start_date?: string;
+  scheduled_time?: string;
 
   // Планирование
   estimate?: string;
@@ -120,6 +124,8 @@ export interface TaskCreate {
   // Рутинность
   is_repeatable?: boolean;
   recurrence_rule?: string;
+  recurrence_interval_hours?: number;
+  recurrence_count?: number;
   routine_type?: string;
 }
 
@@ -151,6 +157,7 @@ export interface TaskUpdate {
   remaining_estimate?: string;
   time_spent?: string;
   start_date?: string;
+  scheduled_time?: string;
 
   // Связи и структура
   project_id?: number;
@@ -179,6 +186,8 @@ export interface TaskUpdate {
   // Рутинность и повторяемость
   is_repeatable?: boolean;
   recurrence_rule?: string;
+  recurrence_interval_hours?: number;
+  recurrence_count?: number;
   routine_type?: string;
   maintenance_level?: string;
   skip_penalty?: string;
