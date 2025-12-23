@@ -19,7 +19,8 @@ export const AddTaskForm: React.FC = () => {
   // Сроки
   const [dueDate, setDueDate] = useState('');
   const [startDate, setStartDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
+  const [scheduledHours, setScheduledHours] = useState('');
+  const [scheduledMinutes, setScheduledMinutes] = useState('');
 
   // Планирование
   const [estimate, setEstimate] = useState('');
@@ -53,6 +54,11 @@ export const AddTaskForm: React.FC = () => {
     }
 
     try {
+      // Формируем время в формате HH:MM
+      const scheduledTime = (scheduledHours && scheduledMinutes)
+        ? `${scheduledHours.padStart(2, '0')}:${scheduledMinutes.padStart(2, '0')}:00`
+        : undefined;
+
       // Создаем задачу на сервере
       const createdTask = await taskAPI.createTask({
         title: title.trim(),
@@ -62,7 +68,7 @@ export const AddTaskForm: React.FC = () => {
         priority,
         due_date: dueDate || undefined,
         start_date: startDate || undefined,
-        scheduled_time: scheduledTime || undefined,
+        scheduled_time: scheduledTime,
         estimate: estimate || undefined,
         labels: labels ? labels.split(',').map(l => l.trim()) : undefined,
         location: location || undefined,
@@ -97,7 +103,8 @@ export const AddTaskForm: React.FC = () => {
     setPriority('Medium');
     setDueDate('');
     setStartDate('');
-    setScheduledTime('');
+    setScheduledHours('');
+    setScheduledMinutes('');
     setEstimate('');
     setLabels('');
     setLocation('');
@@ -215,13 +222,31 @@ export const AddTaskForm: React.FC = () => {
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Время:</label>
-                <input
-                  type="time"
-                  value={scheduledTime}
-                  onChange={(e) => setScheduledTime(e.target.value)}
-                  style={styles.input}
-                  step="60"
-                />
+                <div style={styles.timePickerRow}>
+                  <select
+                    value={scheduledHours}
+                    onChange={(e) => setScheduledHours(e.target.value)}
+                    style={styles.timeSelect}
+                  >
+                    <option value="">ЧЧ</option>
+                    {Array.from({ length: 24 }, (_, i) => {
+                      const hour = i.toString().padStart(2, '0');
+                      return <option key={hour} value={hour}>{hour}</option>;
+                    })}
+                  </select>
+                  <span style={styles.timeSeparator}>:</span>
+                  <select
+                    value={scheduledMinutes}
+                    onChange={(e) => setScheduledMinutes(e.target.value)}
+                    style={styles.timeSelect}
+                  >
+                    <option value="">ММ</option>
+                    {Array.from({ length: 60 }, (_, i) => {
+                      const minute = i.toString().padStart(2, '0');
+                      return <option key={minute} value={minute}>{minute}</option>;
+                    })}
+                  </select>
+                </div>
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Дедлайн:</label>
@@ -489,6 +514,25 @@ const styles = {
     borderRadius: '4px',
     fontSize: '14px',
     boxSizing: 'border-box' as const,
+  } as React.CSSProperties,
+  timePickerRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  } as React.CSSProperties,
+  timeSelect: {
+    padding: '8px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontSize: '14px',
+    boxSizing: 'border-box' as const,
+    flex: 1,
+    minWidth: '70px',
+  } as React.CSSProperties,
+  timeSeparator: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#333',
   } as React.CSSProperties,
   textarea: {
     width: '100%',
