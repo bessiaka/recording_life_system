@@ -59,6 +59,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   // Сроки
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.split('T')[0] : '');
   const [startDate, setStartDate] = useState(task.start_date ? task.start_date.split('T')[0] : '');
+  const [scheduledTime, setScheduledTime] = useState(task.scheduled_time || '');
 
   // Планирование
   const [estimate, setEstimate] = useState(task.estimate || '');
@@ -74,6 +75,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
         priority,
         due_date: dueDate || undefined,
         start_date: startDate || undefined,
+        scheduled_time: scheduledTime || undefined,
         estimate: estimate || undefined,
       });
 
@@ -169,6 +171,17 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 style={styles.input}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Время:</label>
+              <input
+                type="time"
+                value={scheduledTime}
+                onChange={(e) => setScheduledTime(e.target.value)}
+                style={styles.input}
+                step="60"
               />
             </div>
             <div style={styles.formGroup}>
@@ -178,6 +191,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 style={styles.input}
+                min={new Date().toISOString().split('T')[0]}
               />
             </div>
             <div style={styles.formGroup}>
@@ -239,10 +253,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
       {isExpanded && (
         <div style={styles.details}>
           {/* Сроки */}
-          {(task.start_date || task.due_date || task.estimate) && (
+          {(task.start_date || task.due_date || task.scheduled_time || task.estimate) && (
             <div style={styles.detailSection}>
               <strong>Планирование:</strong>
               {task.start_date && <div>📅 Начало: {format(new Date(task.start_date), 'dd.MM.yyyy')}</div>}
+              {task.scheduled_time && <div>🕐 Время: {task.scheduled_time.substring(0, 5)}</div>}
               {task.due_date && <div>⏰ Дедлайн: {format(new Date(task.due_date), 'dd.MM.yyyy')}</div>}
               {task.estimate && <div>⏱️ Оценка: {task.estimate}</div>}
             </div>

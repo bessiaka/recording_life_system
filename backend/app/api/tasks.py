@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import case
 from typing import List
+from datetime import datetime, timedelta, time as dt_time, date as dt_date
 import logging
 
 from ..database import get_db
@@ -88,16 +89,18 @@ async def create_task(
     """
     Создать новую задачу
 
+    Если задача повторяемая, создаются дубликаты с интервалом по времени
+
     Args:
         task_data: Данные для создания задачи
         request: HTTP запрос (для получения session_id)
 
     Returns:
-        TaskResponse: Созданная задача
+        TaskResponse: Созданная задача (первая в серии)
     """
     session_id = get_session_id(request)
 
-    # Создаём задачу
+    # Создаём основную задачу
     db_task = Task(**task_data.model_dump())
     db.add(db_task)
     db.commit()
@@ -115,8 +118,68 @@ async def create_task(
     await manager.broadcast({
         "type": "task_created",
         "task": TaskResponse.model_validate(db_task).model_dump(mode='json'),
-        "session_id": session_id  # ← ДОБАВЛЕНО
+        "session_id": session_id
     })
+
+    # Создаем дубликаты для повторяемых задач
+    if (db_task.is_repeatable and
+        db_task.recurrence_interval_hours and
+        db_task.recurrence_count and
+        db_task.recurrence_count > 1 and
+        db_task.scheduled_time and
+        db_task.start_date):
+
+        logger.info(f"🔁 Создание {db_task.recurrence_count - 1} дубликатов для повторяемой задачи")
+
+        # Парсим начальные дату и время
+        current_date = db_task.start_date
+        current_time = db_task.scheduled_time
+
+        # Создаем дубликаты
+        for i in range(1, db_task.recurrence_count):
+            # Вычисляем новое время
+            time_parts = str(current_time).split(':')
+            hours = int(time_parts[0])
+            minutes = int(time_parts[1]) if len(time_parts) > 1 else 0
+
+            # Добавляем интервал в часах
+            total_minutes = hours * 60 + minutes + (db_task.recurrence_interval_hours * 60)
+            new_hours = (total_minutes // 60) % 24
+            new_minutes = total_minutes % 60
+
+            # Если время перешло на следующий день
+            days_to_add = total_minutes // (24 * 60)
+            if days_to_add > 0:
+                current_date = current_date + timedelta(days=days_to_add)
+
+            # Создаем новое время
+            current_time = dt_time(hour=new_hours, minute=new_minutes)
+
+            # Создаем дубликат задачи
+            duplicate_data = task_data.model_dump()
+            duplicate_data['start_date'] = current_date
+            duplicate_data['scheduled_time'] = current_time
+            duplicate_data['title'] = f"{task_data.title} (повтор {i+1})"
+
+            duplicate_task = Task(**duplicate_data)
+            db.add(duplicate_task)
+            db.commit()
+            db.refresh(duplicate_task)
+
+            # Генерируем ключ
+            if not duplicate_task.key:
+                duplicate_task.key = generate_task_key(duplicate_task.id)
+                db.commit()
+                db.refresh(duplicate_task)
+
+            logger.info(f"  ➕ Дубликат создан: ID={duplicate_task.id}, время={current_time}, дата={current_date}")
+
+            # Отправляем обновление
+            await manager.broadcast({
+                "type": "task_created",
+                "task": TaskResponse.model_validate(duplicate_task).model_dump(mode='json'),
+                "session_id": session_id
+            })
 
     return db_task
 

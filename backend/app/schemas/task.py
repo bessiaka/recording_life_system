@@ -55,6 +55,8 @@ class TaskBase(BaseModel):
     # 3. Рутинность и повторяемость
     is_repeatable: Optional[bool] = Field(default=False, description="Повторяемая задача")
     recurrence_rule: Optional[str] = Field(None, description="Правило повторения")
+    recurrence_interval_hours: Optional[int] = Field(None, description="Интервал повторения в часах")
+    recurrence_count: Optional[int] = Field(None, description="Количество повторений")
     routine_type: Optional[str] = Field(None, description="Тип рутины")
     maintenance_level: Optional[str] = Field(None, description="Уровень важности")
     skip_penalty: Optional[str] = Field(None, description="Штраф за пропуск")
@@ -122,6 +124,8 @@ class TaskUpdate(BaseModel):
     # 3. Рутинность и повторяемость
     is_repeatable: Optional[bool] = None
     recurrence_rule: Optional[str] = None
+    recurrence_interval_hours: Optional[int] = None
+    recurrence_count: Optional[int] = None
     routine_type: Optional[str] = None
     maintenance_level: Optional[str] = None
     skip_penalty: Optional[str] = None

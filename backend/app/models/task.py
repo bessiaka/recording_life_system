@@ -69,6 +69,8 @@ class Task(Base):
         # 3. Рутинность и повторяемость
         is_repeatable: true / false
         recurrence_rule: Daily / Weekly / Cron
+        recurrence_interval_hours: Интервал повторения в часах
+        recurrence_count: Количество повторений
         routine_type: Routine / Ad-hoc
         maintenance_level: Core / Optional
         skip_penalty: Что будет, если пропустить
@@ -132,6 +134,8 @@ class Task(Base):
     # 3. Рутинность и повторяемость
     is_repeatable = Column(Boolean, nullable=False, default=False)
     recurrence_rule = Column(String(100), nullable=True)  # Daily / Weekly / Cron
+    recurrence_interval_hours = Column(Integer, nullable=True)  # Интервал повторения в часах
+    recurrence_count = Column(Integer, nullable=True)  # Количество повторений
     routine_type = Column(String(50), nullable=True)  # Routine / Ad-hoc
     maintenance_level = Column(String(50), nullable=True)  # Core / Optional
     skip_penalty = Column(Text, nullable=True)

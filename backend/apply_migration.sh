@@ -1,7 +1,7 @@
 #!/bin/bash
-# Скрипт для применения миграции добавления поля scheduled_time
+# Скрипт для применения всех миграций базы данных
 
-echo "🔧 Применение миграции: добавление поля scheduled_time"
+echo "🔧 Применение миграций базы данных"
 
 # Переходим в корень репозитория
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,17 +20,29 @@ echo "📦 Найдена база данных: $DB_PATH"
 echo "📦 Создаём резервную копию..."
 cp "$DB_PATH" "${DB_PATH}.backup_$(date +%Y%m%d_%H%M%S)"
 
-echo "🔧 Применяем миграцию..."
-sqlite3 "$DB_PATH" < "$SCRIPT_DIR/migrations/001_add_scheduled_time.sql"
+# Применяем миграции последовательно
+MIGRATIONS=(
+    "001_add_scheduled_time.sql"
+    "002_add_recurrence_fields.sql"
+)
 
-if [ $? -eq 0 ]; then
-    echo "✅ Миграция успешно применена!"
-    echo ""
-    echo "Для проверки выполните:"
-    echo "  sqlite3 $DB_PATH \"PRAGMA table_info(tasks);\" | grep scheduled_time"
-else
-    echo "❌ Ошибка при применении миграции"
-    echo "📦 Можно восстановить из резервной копии:"
-    echo "  cp ${DB_PATH}.backup_* $DB_PATH"
-    exit 1
-fi
+for migration in "${MIGRATIONS[@]}"; do
+    MIGRATION_PATH="$SCRIPT_DIR/migrations/$migration"
+
+    if [ -f "$MIGRATION_PATH" ]; then
+        echo "🔧 Применяем $migration..."
+        sqlite3 "$DB_PATH" < "$MIGRATION_PATH" 2>&1
+
+        if [ $? -eq 0 ]; then
+            echo "  ✅ $migration применена"
+        else
+            echo "  ⚠️  $migration пропущена (возможно, уже применена)"
+        fi
+    fi
+done
+
+echo ""
+echo "✅ Все миграции обработаны!"
+echo ""
+echo "Для проверки выполните:"
+echo "  sqlite3 $DB_PATH \"PRAGMA table_info(tasks);\""

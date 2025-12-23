@@ -37,6 +37,8 @@ export const AddTaskForm: React.FC = () => {
   // Рутинность
   const [isRepeatable, setIsRepeatable] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState('');
+  const [recurrenceIntervalHours, setRecurrenceIntervalHours] = useState('');
+  const [recurrenceCount, setRecurrenceCount] = useState('');
   const [routineType, setRoutineType] = useState('');
 
   const [isOpen, setIsOpen] = useState(false);
@@ -70,6 +72,8 @@ export const AddTaskForm: React.FC = () => {
         execution_mode: executionMode || undefined,
         is_repeatable: isRepeatable,
         recurrence_rule: recurrenceRule || undefined,
+        recurrence_interval_hours: recurrenceIntervalHours ? parseInt(recurrenceIntervalHours) : undefined,
+        recurrence_count: recurrenceCount ? parseInt(recurrenceCount) : undefined,
         routine_type: routineType || undefined,
       });
 
@@ -103,6 +107,8 @@ export const AddTaskForm: React.FC = () => {
     setExecutionMode('');
     setIsRepeatable(false);
     setRecurrenceRule('');
+    setRecurrenceIntervalHours('');
+    setRecurrenceCount('');
     setRoutineType('');
     setIsOpen(false);
     setShowAdvanced(false);
@@ -204,6 +210,7 @@ export const AddTaskForm: React.FC = () => {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   style={styles.input}
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
               <div style={styles.formGroup}>
@@ -213,7 +220,7 @@ export const AddTaskForm: React.FC = () => {
                   value={scheduledTime}
                   onChange={(e) => setScheduledTime(e.target.value)}
                   style={styles.input}
-                  placeholder="09:00"
+                  step="60"
                 />
               </div>
               <div style={styles.formGroup}>
@@ -223,6 +230,7 @@ export const AddTaskForm: React.FC = () => {
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   style={styles.input}
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
               <div style={styles.formGroup}>
@@ -338,28 +346,56 @@ export const AddTaskForm: React.FC = () => {
               </label>
             </div>
             {isRepeatable && (
-              <div style={styles.row}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Правило повторения:</label>
-                  <input
-                    type="text"
-                    value={recurrenceRule}
-                    onChange={(e) => setRecurrenceRule(e.target.value)}
-                    style={styles.input}
-                    placeholder="Daily, Weekly, Monthly"
-                  />
+              <>
+                <div style={styles.row}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Интервал (часы): *</label>
+                    <input
+                      type="number"
+                      value={recurrenceIntervalHours}
+                      onChange={(e) => setRecurrenceIntervalHours(e.target.value)}
+                      style={styles.input}
+                      placeholder="3"
+                      min="1"
+                      required
+                    />
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Количество раз: *</label>
+                    <input
+                      type="number"
+                      value={recurrenceCount}
+                      onChange={(e) => setRecurrenceCount(e.target.value)}
+                      style={styles.input}
+                      placeholder="5"
+                      min="1"
+                      required
+                    />
+                  </div>
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Тип рутины:</label>
-                  <input
-                    type="text"
-                    value={routineType}
-                    onChange={(e) => setRoutineType(e.target.value)}
-                    style={styles.input}
-                    placeholder="Routine, Ad-hoc"
-                  />
+                <div style={styles.row}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Правило повторения:</label>
+                    <input
+                      type="text"
+                      value={recurrenceRule}
+                      onChange={(e) => setRecurrenceRule(e.target.value)}
+                      style={styles.input}
+                      placeholder="Daily, Weekly, Monthly"
+                    />
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Тип рутины:</label>
+                    <input
+                      type="text"
+                      value={routineType}
+                      onChange={(e) => setRoutineType(e.target.value)}
+                      style={styles.input}
+                      placeholder="Routine, Ad-hoc"
+                    />
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </>

@@ -84,6 +84,8 @@ export interface Task {
   // 3. Рутинность и повторяемость
   is_repeatable?: boolean;
   recurrence_rule?: string;
+  recurrence_interval_hours?: number;
+  recurrence_count?: number;
   routine_type?: string;
   maintenance_level?: string;
   skip_penalty?: string;
@@ -122,6 +124,8 @@ export interface TaskCreate {
   // Рутинность
   is_repeatable?: boolean;
   recurrence_rule?: string;
+  recurrence_interval_hours?: number;
+  recurrence_count?: number;
   routine_type?: string;
 }
 
@@ -182,6 +186,8 @@ export interface TaskUpdate {
   // Рутинность и повторяемость
   is_repeatable?: boolean;
   recurrence_rule?: string;
+  recurrence_interval_hours?: number;
+  recurrence_count?: number;
   routine_type?: string;
   maintenance_level?: string;
   skip_penalty?: string;
