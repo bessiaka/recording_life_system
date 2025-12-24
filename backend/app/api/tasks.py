@@ -1,5 +1,5 @@
 """
-REST API endpoints для работы с задачами
+REST API endpoints для работы с задачами Task v1
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
@@ -16,24 +16,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
-# Порядок приоритетов для сортировки
+# Порядок приоритетов для сортировки (Task v1)
 PRIORITY_ORDER = {
-    "Critical": 1,
-    "High": 2,
-    "Medium": 3,
-    "Low": 4,
-    "Lowest": 5
+    "High": 1,
+    "Medium": 2,
+    "Low": 3
 }
 
 
 def get_session_id(request: Request) -> str:
     """Получить session_id из заголовка запроса"""
     return request.headers.get("X-Session-ID", "unknown")
-
-
-def generate_task_key(task_id: int) -> str:
-    """Генерирует человекочитаемый ключ задачи"""
-    return f"TASK-{task_id}"
 
 
 @router.get("/", response_model=List[TaskResponse])
@@ -97,19 +90,13 @@ async def create_task(
     """
     session_id = get_session_id(request)
 
-    # Создаём задачу
+    # Создаём задачу Task v1
     db_task = Task(**task_data.model_dump())
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
 
-    # Генерируем уникальный ключ после получения ID
-    if not db_task.key:
-        db_task.key = generate_task_key(db_task.id)
-        db.commit()
-        db.refresh(db_task)
-
-    logger.info(f"✅ Задача создана: ID={db_task.id}, key='{db_task.key}', title='{db_task.title}', session={session_id}")
+    logger.info(f"✅ Задача создана: ID={db_task.id}, title='{db_task.title}', session={session_id}")
 
     # Отправляем обновление всем подключенным клиентам
     await manager.broadcast({

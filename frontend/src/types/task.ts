@@ -1,192 +1,171 @@
 /**
- * Типы данных для задач
+ * Типы данных для Task v1 и Execution v1
+ * Recording Life System - Intent (намерение) + Fact (фиксация)
  */
 
-// Типы приоритета
-export type Priority = 'Critical' | 'High' | 'Medium' | 'Low' | 'Lowest';
-
-// Типы статуса
-export type Status = 'Backlog' | 'To Do' | 'In Progress' | 'Done';
+// ============================================================================
+// TASK V1 - INTENT (Намерение)
+// ============================================================================
 
 // Типы задач
-export type TaskType = 'Task' | 'Bug' | 'Chore' | 'Spike';
+export type TaskType = 'Task' | 'Bug' | 'Chore';
+
+// Типы статуса (status = Done означает что ожидание больше не актуально!)
+export type TaskStatus = 'Backlog' | 'Active' | 'Done' | 'Archived';
+
+// Типы приоритета
+export type Priority = 'Low' | 'Medium' | 'High';
 
 // Типы места выполнения
-export type Location = 'Дом' | 'Работа' | 'Любое';
-
-// Типы окружения
-export type Environment = 'Тишина' | 'Фон';
+export type Location = 'Home' | 'Office' | 'Anywhere';
 
 // Типы connectivity
 export type Connectivity = 'Online' | 'Offline';
 
-// Типы execution mode
-export type ExecutionMode = 'Solo' | 'Async' | 'Sync';
+// Типы рутины
+export type RoutineType = 'Routine' | 'Ad-hoc';
 
+/**
+ * Контекст выполнения задачи
+ */
+export interface TaskContext {
+  location?: Location;
+  tools_required?: string[];
+  connectivity?: Connectivity;
+}
+
+/**
+ * Информация о повторяемости задачи
+ */
+export interface TaskRecurrence {
+  is_repeatable: boolean;
+  routine_type?: RoutineType;
+  recurrence_rule?: string;  // Daily, Weekly, Cron expression
+}
+
+/**
+ * Task v1 - Декларация намерения (Intent)
+ *
+ * Task отвечает на вопросы:
+ * - Что это за ожидание?
+ * - Насколько оно важно?
+ * - Повторяется ли оно?
+ * - В каком контексте его можно выполнять?
+ */
 export interface Task {
-  // 1.1. Идентификация и описание
+  // Идентификация и описание
   id: number;
-  key?: string;  // TASK-123
   title: string;
   description?: string;
-  type?: TaskType;
+  type: TaskType;
 
-  // 1.2. Статус и жизненный цикл
-  status?: Status;
-  resolution?: string;
+  // Управление жизненным циклом
+  status: TaskStatus;
+  priority: Priority;
   created_at: string;
   updated_at: string;
-  completed_at?: string;
 
-  // 1.3. Ответственность и владение
-  assignee?: string;
-  reporter?: string;
-  watchers?: string[];
-
-  // 1.4. Приоритет и срочность
-  priority?: Priority;
-  severity?: string;
+  // Планирование (минимум)
   due_date?: string;
-  sla?: string;
 
-  // 1.5. Планирование и оценка
-  estimate?: string;
-  original_estimate?: string;
-  remaining_estimate?: string;
-  time_spent?: string;
-  start_date?: string;
+  // Контекст выполнения
+  context?: TaskContext;
 
-  // 1.6. Связи и структура
-  project_id?: number;
-  parent_id?: number;
-  subtasks?: number[];
-  dependencies?: {
-    blocked_by?: number[];
-    blocks?: number[];
-  };
-  links?: number[];
-
-  // 1.7. Классификация и группировка
-  labels?: string[];
-  components?: string[];
-  epic_id?: number;
-  sprint_id?: number;
-  milestone?: string;
-
-  // 2. Контекст выполнения
-  location?: Location;
-  tools_required?: string[];
-  environment?: Environment;
-  connectivity?: Connectivity;
-  execution_mode?: ExecutionMode;
-
-  // 3. Рутинность и повторяемость
-  is_repeatable?: boolean;
-  recurrence_rule?: string;
-  routine_type?: string;
-  maintenance_level?: string;
-  skip_penalty?: string;
+  // Рутинность и повторяемость
+  recurrence?: TaskRecurrence;
 }
 
+/**
+ * Схема для создания Task
+ */
 export interface TaskCreate {
-  // Основные поля
   title: string;
   description?: string;
   type?: TaskType;
-
-  // Статус и приоритет
-  status?: Status;
+  status?: TaskStatus;
   priority?: Priority;
-
-  // Сроки
   due_date?: string;
-  start_date?: string;
-
-  // Планирование
-  estimate?: string;
-
-  // Связи
-  project_id?: number;
-  parent_id?: number;
-  labels?: string[];
-
-  // Контекст
-  location?: Location;
-  tools_required?: string[];
-  environment?: Environment;
-  connectivity?: Connectivity;
-  execution_mode?: ExecutionMode;
-
-  // Рутинность
-  is_repeatable?: boolean;
-  recurrence_rule?: string;
-  routine_type?: string;
+  context?: TaskContext;
+  recurrence?: TaskRecurrence;
 }
 
+/**
+ * Схема для обновления Task
+ */
 export interface TaskUpdate {
-  // Основные поля
   title?: string;
   description?: string;
   type?: TaskType;
-
-  // Статус и жизненный цикл
-  status?: Status;
-  resolution?: string;
-  completed_at?: string;
-
-  // Ответственность (пока не используется)
-  assignee?: string;
-  reporter?: string;
-  watchers?: string[];
-
-  // Приоритет и срочность
+  status?: TaskStatus;
   priority?: Priority;
-  severity?: string;
   due_date?: string;
-  sla?: string;
-
-  // Планирование и оценка
-  estimate?: string;
-  original_estimate?: string;
-  remaining_estimate?: string;
-  time_spent?: string;
-  start_date?: string;
-
-  // Связи и структура
-  project_id?: number;
-  parent_id?: number;
-  subtasks?: number[];
-  dependencies?: {
-    blocked_by?: number[];
-    blocks?: number[];
-  };
-  links?: number[];
-
-  // Классификация и группировка
-  labels?: string[];
-  components?: string[];
-  epic_id?: number;
-  sprint_id?: number;
-  milestone?: string;
-
-  // Контекст выполнения
-  location?: Location;
-  tools_required?: string[];
-  environment?: Environment;
-  connectivity?: Connectivity;
-  execution_mode?: ExecutionMode;
-
-  // Рутинность и повторяемость
-  is_repeatable?: boolean;
-  recurrence_rule?: string;
-  routine_type?: string;
-  maintenance_level?: string;
-  skip_penalty?: string;
+  context?: TaskContext;
+  recurrence?: TaskRecurrence;
 }
 
+// ============================================================================
+// EXECUTION V1 - FACT (Фиксация факта)
+// ============================================================================
+
+// Статусы выполнения
+export type ExecutionStatus = 'completed' | 'failed' | 'skipped' | 'partial';
+
+// Способ записи
+export type RecordedBy = 'manual' | 'auto';
+
+/**
+ * Execution v1 - Фиксация факта выполнения
+ *
+ * Execution отвечает на вопросы:
+ * - Что реально произошло?
+ * - Когда?
+ * - Чем закончилось?
+ * - Какие данные я хочу сохранить по факту?
+ */
+export interface Execution {
+  // Связь
+  id: number;
+  task_id: number;
+
+  // Результат попытки
+  status: ExecutionStatus;
+
+  // Временные параметры
+  started_at?: string;
+  ended_at?: string;
+  duration?: number;  // в секундах
+
+  // Фиксация данных (черный ящик)
+  payload?: Record<string, any>;
+  note?: string;
+
+  // Метаданные
+  recorded_by: RecordedBy;
+  created_at: string;
+}
+
+/**
+ * Схема для создания Execution
+ */
+export interface ExecutionCreate {
+  task_id: number;
+  status: ExecutionStatus;
+  started_at?: string;
+  ended_at?: string;
+  duration?: number;
+  payload?: Record<string, any>;
+  note?: string;
+  recorded_by?: RecordedBy;
+}
+
+// ============================================================================
+// WEBSOCKET MESSAGES
+// ============================================================================
+
 export interface WebSocketMessage {
-  type: 'task_created' | 'task_updated' | 'task_deleted';
+  type: 'task_created' | 'task_updated' | 'task_deleted' | 'execution_created';
   task?: Task;
+  execution?: Execution;
   task_id?: number;
   session_id?: string;
 }

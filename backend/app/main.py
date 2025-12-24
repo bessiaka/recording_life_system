@@ -5,7 +5,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-from .api import tasks
+from .api import tasks, executions
 from .websocket import manager
 from .database import Base, engine
 
@@ -41,16 +41,19 @@ app.add_middleware(
 
 # Подключение роутеров
 app.include_router(tasks.router)
+app.include_router(executions.router)
 
 
 @app.get("/")
 async def root():
     """Корневой endpoint"""
     return {
-        "message": "Todo Voice API",
+        "message": "Recording Life System API v1",
         "version": "1.0.0",
+        "description": "Intent (Task) + Fact (Execution) tracking system",
         "endpoints": {
             "tasks": "/api/tasks",
+            "executions": "/api/executions",
             "websocket": "/ws",
             "docs": "/docs"
         }

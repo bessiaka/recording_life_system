@@ -24,7 +24,7 @@ export const useWebSocket = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const { addTask, updateTask, deleteTask } = useTaskStore();
+  const { addTask, updateTask, deleteTask, addExecution } = useTaskStore();
 
   const connect = () => {
     // ✅ Закрываем ТОЛЬКО если соединение открыто
@@ -86,6 +86,16 @@ export const useWebSocket = () => {
                   message.task_id
                 );
                 deleteTask(message.task_id);
+              }
+              break;
+            case 'execution_created':
+              if (message.execution) {
+                const isOwnEvent = message.session_id === SESSION_ID;
+                console.log(
+                  isOwnEvent ? '✅ Подтверждение execution:' : '✅ Execution от другого клиента:',
+                  message.execution.id
+                );
+                addExecution(message.execution);
               }
               break;
           }
