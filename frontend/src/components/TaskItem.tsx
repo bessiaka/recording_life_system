@@ -6,6 +6,7 @@ import { Task } from '../types/task';
 import { taskAPI } from '../api/tasks';
 import { useTaskStore } from '../store/taskStore';
 import { AddExecutionForm } from './AddExecutionForm';
+import { EditTaskForm } from './EditTaskForm';
 import { ExecutionList } from './ExecutionList';
 
 interface TaskItemProps {
@@ -15,6 +16,7 @@ interface TaskItemProps {
 export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   const { setError } = useTaskStore();
   const [showExecutionForm, setShowExecutionForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [showExecutions, setShowExecutions] = useState(false);
 
   const handleDelete = async () => {
@@ -53,9 +55,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
             </span>
             <span style={styles.type}>{task.type}</span>
           </div>
-          <button onClick={handleDelete} style={styles.deleteButton}>
-            Удалить
-          </button>
+          <div style={styles.headerButtons}>
+            <button onClick={() => setShowEditForm(true)} style={styles.editButton}>
+              Редактировать
+            </button>
+            <button onClick={handleDelete} style={styles.deleteButton}>
+              Удалить
+            </button>
+          </div>
         </div>
 
         <h3 style={styles.title}>{task.title}</h3>
@@ -103,6 +110,13 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
           onClose={() => setShowExecutionForm(false)}
         />
       )}
+
+      {showEditForm && (
+        <EditTaskForm
+          task={task}
+          onClose={() => setShowEditForm(false)}
+        />
+      )}
     </>
   );
 };
@@ -125,6 +139,19 @@ const styles = {
     display: 'flex',
     gap: '8px',
     alignItems: 'center',
+  },
+  headerButtons: {
+    display: 'flex',
+    gap: '8px',
+  },
+  editButton: {
+    padding: '6px 12px',
+    backgroundColor: '#007bff',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '12px',
+    cursor: 'pointer',
   },
   priorityBadge: {
     padding: '4px 8px',

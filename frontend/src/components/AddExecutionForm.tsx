@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { ExecutionCreate } from '../types/task';
 import { executionAPI } from '../api/tasks';
 import { useTaskStore } from '../store/taskStore';
+import { PayloadEditor } from './PayloadEditor';
 
 interface AddExecutionFormProps {
   taskId: number;
@@ -20,7 +21,7 @@ export const AddExecutionForm: React.FC<AddExecutionFormProps> = ({ taskId, task
   const [startedAt, setStartedAt] = useState('');
   const [endedAt, setEndedAt] = useState('');
   const [note, setNote] = useState('');
-  const [payloadJson, setPayloadJson] = useState('');
+  const [payload, setPayload] = useState<Record<string, any>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,17 +30,6 @@ export const AddExecutionForm: React.FC<AddExecutionFormProps> = ({ taskId, task
     setError(null);
 
     try {
-      let payload: Record<string, any> | undefined;
-      if (payloadJson.trim()) {
-        try {
-          payload = JSON.parse(payloadJson);
-        } catch {
-          setError('Неверный JSON в payload');
-          setIsLoading(false);
-          return;
-        }
-      }
-
       // Вычисляем duration если заданы оба времени
       let duration: number | undefined;
       if (startedAt && endedAt) {
@@ -55,7 +45,7 @@ export const AddExecutionForm: React.FC<AddExecutionFormProps> = ({ taskId, task
         ended_at: endedAt || undefined,
         duration,
         note: note.trim() || undefined,
-        payload,
+        payload: Object.keys(payload).length > 0 ? payload : undefined,
         recorded_by: 'manual',
       };
 
@@ -118,16 +108,7 @@ export const AddExecutionForm: React.FC<AddExecutionFormProps> = ({ taskId, task
             />
           </div>
 
-          <div style={styles.field}>
-            <label style={styles.label}>Данные (JSON payload, опционально)</label>
-            <textarea
-              value={payloadJson}
-              onChange={(e) => setPayloadJson(e.target.value)}
-              style={styles.textarea}
-              placeholder='{"key": "value"}'
-              rows={3}
-            />
-          </div>
+          <PayloadEditor value={payload} onChange={setPayload} />
 
           <div style={styles.buttons}>
             <button type="button" onClick={onClose} style={styles.cancelButton}>
